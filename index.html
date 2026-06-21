@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Generador de emails — Grabaciones PSF</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --rojo:#A80414;
+    --vino:#6D0006;
+    --crema:#FFEFE3;
+    --rosa:#FBC3BC;
+    --fondo:#fff7f3;
+    --gris:#686868;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--fondo); color:#2b2b2b; font-family:Arial, Helvetica, sans-serif; }
+  .app{ max-width:1220px; margin:0 auto; padding:24px; }
+  h1{ margin:0 0 6px; color:var(--vino); font-size:26px; }
+  .sub{ margin:0 0 20px; color:#5d5d5d; line-height:1.45; }
+  .grid{ display:grid; grid-template-columns:430px 1fr; gap:22px; align-items:start; }
+  .panel{ background:#fff; border:1px solid #f0d1cc; border-radius:14px; box-shadow:0 6px 18px rgba(109,0,6,0.08); padding:18px; }
+  label{ display:block; font-weight:bold; color:var(--vino); margin:12px 0 6px; }
+  input{ width:100%; border:1px solid #d8b7b1; border-radius:9px; padding:10px 11px; font-size:14px; font-family:Arial, Helvetica, sans-serif; }
+  input:focus{ outline:2px solid var(--rosa); border-color:var(--rojo); }
+  .small{ font-size:12px; color:var(--gris); line-height:1.4; }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+  button{ border:0; border-radius:999px; padding:10px 14px; font-weight:bold; cursor:pointer; font-family:Arial, Helvetica, sans-serif; }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+  .btn-main{ background:var(--rojo); color:white; }
+  .btn-soft{ background:var(--crema); color:var(--vino); border:1px solid var(--rosa); }
+  .btn-dark{ background:var(--vino); color:white; }
+  .btn-danger{ background:#f4e1de; color:#8a0010; }
+  .btn-active{ background:var(--vino); color:#fff; }
+  .talk-list{ max-height:470px; overflow:auto; border:1px solid #f0d1cc; border-radius:10px; margin-top:12px; }
+  .talk{ padding:12px; border-bottom:1px solid #f4dfdc; background:#fff; }
+  .talk:last-child{ border-bottom:0; }
+  .talk-title{ font-weight:bold; font-size:14px; color:#2f2f2f; line-height:1.3; }
+  .talk-meta{ font-size:12px; color:#6D0006; margin-top:5px; }
+  .talk-actions{ margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .tag{ font-size:11px; background:#FFEFE3; color:#6D0006; border:1px solid #FBC3BC; border-radius:999px; padding:4px 8px; white-space:nowrap; }
+  .tag-ok{ background:#e9f8ec; color:#145b25; border-color:#bce3c4; }
+  .tag-missing{ background:#fff0ce; color:#654400; border-color:#f0d28a; }
+  .selected-item{ padding:10px; border:1px solid #f0d1cc; background:#fffafa; border-radius:10px; margin:8px 0; font-size:13px; line-height:1.35; }
+  .selected-item b{ color:#6D0006; }
+  .copybox{ background:white; border-radius:14px; overflow:auto; border:1px solid #ead5d2; padding:12px; }
+  #emailPreview{ width:100%; }
+  .warning{ margin-top:12px; padding:10px 12px; border-radius:10px; background:#fff0ce; color:#654400; font-size:12px; line-height:1.45; }
+  .hint{ margin-top:12px; padding:10px 12px; border-radius:10px; background:#fffafa; border:1px dashed #FBC3BC; color:#6D0006; font-size:12px; line-height:1.45; }
+  .subject-row{ display:flex; gap:8px; align-items:center; margin:6px 0 12px; }
+  .subject-row input{ flex:1; }
+  .brandbar{ display:flex; align-items:center; gap:14px; background:#fff; border:1px solid #f0d1cc; border-radius:14px; padding:14px 16px; margin-bottom:18px; box-shadow:0 6px 18px rgba(109,0,6,0.06); }
+  .brandbar img{ display:block; max-height:54px; width:auto; }
+  .brandbar-title{ color:var(--vino); font-weight:bold; font-size:17px; line-height:1.25; }
+  .brandbar-sub{ color:#5d5d5d; font-size:13px; line-height:1.35; margin-top:3px; }
+  .site-footer{ margin:18px 0 0 0; text-align:center; color:#6D0006; font-size:13px; line-height:1.6; }
+  .site-footer a{ color:#A80414; font-weight:bold; text-decoration:none; }
+  @media (max-width:900px){ .grid{ grid-template-columns:1fr; } .app{ padding:16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brandbar">
+    <img src="assets/logo.png" alt="MenstruAcción" onerror="this.style.display='none'">
+    <div>
+      <div class="brandbar-title">Grabaciones de Peruanos Sin Fronteras × MenstruAcción</div>
+      <div class="brandbar-sub">El correo usa los assets locales en <b>assets/</b>: banner, logo e íconos de redes.</div>
+    </div>
+  </div>
+
+  <h1>Generador manual de emails — Grabaciones de PSF</h1>
+  <p class="sub">Escribe el nombre + añade las grabaciones que correspondan → copia el correo → pégalo en Gmail.</p>
+
+  <div class="grid">
+    <div class="panel">
+      <label>Nombre del participante</label>
+      <input id="nombre" placeholder="Ej. Ana" oninput="renderEmail()">
+
+      <label>Buscar grabación/charla</label>
+      <input id="busqueda" placeholder="Buscar por ponente, título, tipo..." oninput="renderTalks()">
+
+      <div class="toolbar">
+        <button id="f-available" class="btn-active" onclick="filtrarEstado('available')">Con grabación</button>
+        <button id="f-all" class="btn-soft" onclick="filtrarEstado('all')">Todas</button>
+        <button id="f-missing" class="btn-soft" onclick="filtrarEstado('missing')">Falta video</button>
+      </div>
+
+      <div class="toolbar">
+        <button id="t-" class="btn-soft" onclick="filtrarTipo('')">Todo tipo</button>
+        <button id="t-Charla regular" class="btn-soft" onclick="filtrarTipo('Charla regular')">Regulares</button>
+        <button id="t-Masterclass 360°" class="btn-soft" onclick="filtrarTipo('Masterclass 360°')">Masterclass</button>
+        <button id="t-Taller" class="btn-soft" onclick="filtrarTipo('Taller')">Taller</button>
+      </div>
+
+      <div id="talkList" class="talk-list"></div>
+
+      <label>Grabaciones añadidas a este correo</label>
+      <div id="selectedList" class="small">Todavía no añadiste grabaciones.</div>
+
+      <div class="toolbar">
+        <button class="btn-danger" onclick="limpiarGrabaciones()">Limpiar grabaciones</button>
+        <button class="btn-danger" onclick="limpiarTodo()">Limpiar todo</button>
+      </div>
+
+      <div class="hint">
+        Para futuras grabaciones: abre <b>index.html</b>, busca el nombre de la charla y reemplaza <b>PEGAVIDEOAQUI</b> por el link de YouTube.
+      </div>
+    </div>
+
+    <div class="panel">
+      <label>Asunto sugerido</label>
+      <div class="subject-row">
+        <input id="subjectPreview" readonly>
+        <button class="btn-soft" onclick="copiarAsunto()">Copiar asunto</button>
+      </div>
+
+      <div class="toolbar" style="margin-top:0; margin-bottom:12px;">
+        <button class="btn-main" onclick="seleccionarCorreo()">Seleccionar correo</button>
+        <button class="btn-dark" onclick="copiarCorreo()">Copiar correo</button>
+      </div>
+      <p class="small">Después de copiar: Gmail → Nuevo correo → pega con Ctrl+V. Los botones de YouTube y WhatsApp quedan clickeables.</p>
+      <div class="copybox">
+        <div id="emailPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    Website oficial: <a href="https://menstruaccion.org/" target="_blank">https://menstruaccion.org/</a>
+  </div>
+</div>
+
+<script>
+const WHATSAPP_CHANNEL = "https://whatsapp.com/channel/0029VbCsYW5LtOjHvvviM046";
+const WEB_MENSTRUACCION = "https://menstruaccion.org/";
+const LINKS = {
+  website: WEB_MENSTRUACCION,
+  instagram: "https://www.instagram.com/menstruaccion.pe/",
+  whatsappChannel: WHATSAPP_CHANNEL,
+  charlas: "https://menstruaccion.org/charlas",
+  facebook: WEB_MENSTRUACCION,
+  linkedin: WEB_MENSTRUACCION,
+  tiktok: WEB_MENSTRUACCION,
+  youtube: WEB_MENSTRUACCION
+};
+
+// IMPORTANTE: estos nombres deben existir dentro de la carpeta assets/.
+// Si cambias el nombre del archivo, cámbialo aquí también.
+const ASSETS = {
+  banner: "banner-psf.png",
+  logo: "logo.png",
+  facebook: "facebook.png",
+  instagram: "instagram.png",
+  linkedin: "linkedin.png",
+  tiktok: "tiktok.png",
+  whatsapp: "whatsapp.png",
+  youtube: "youtube.png"
+};
+
+function asset(filename){
+  return new URL("assets/" + filename, window.location.href).href;
+}
+
+function socialIcon(file, label, url){
+  return `<td align="center" style="padding:0 6px;">
+    <a href="${url}" target="_blank" style="text-decoration:none; display:inline-block;">
+      <img src="${asset(file)}" width="24" height="24" alt="${label}" style="display:block; border:0; width:24px; height:24px; object-fit:contain;">
+    </a>
+  </td>`;
+}
+
+function socialFooter(){
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="border-collapse:collapse; margin:14px auto 10px auto;">
+      <tr>
+        ${socialIcon(ASSETS.facebook, "Facebook", LINKS.facebook)}
+        ${socialIcon(ASSETS.instagram, "Instagram", LINKS.instagram)}
+        ${socialIcon(ASSETS.linkedin, "LinkedIn", LINKS.linkedin)}
+        ${socialIcon(ASSETS.tiktok, "TikTok", LINKS.tiktok)}
+        ${socialIcon(ASSETS.whatsapp, "WhatsApp", LINKS.whatsappChannel)}
+        ${socialIcon(ASSETS.youtube, "YouTube", LINKS.youtube)}
+      </tr>
+    </table>`;
+}
+
+const GRABACIONES = [
+  {
+    "tipo": "Charla regular",
+    "ponente": "Alejandra Carrasco",
+    "titulo": "Alejandra Carrasco — De Dartmouth King Scholar a Harvard Ed.M: educación, emprendimiento social y becas globales",
+    "fechaHora": "Jueves 18 de junio, 5:00–6:00 PM",
+    "video": "https://youtu.be/98RXvd5bC14"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Alfred Cueva",
+    "titulo": "Alfred Cueva — De Perú a Corea, Samsung y Georgia Tech: una ruta hacia la robótica de frontera",
+    "fechaHora": "Domingo 5 de julio, 4:00–5:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Carla Torre",
+    "titulo": "Carla Torre — Mujeres en STEM: cómo construir una carrera en ingeniería sin dejar de generar impacto",
+    "fechaHora": "Lunes 29 de junio, 6:00–7:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Cristina Cordova-Arias",
+    "titulo": "Cristina Cordova-Arias — De Perú al mundo: cómo transformar una tesis en oportunidades académicas y profesionales",
+    "fechaHora": "Domingo 5 de julio, 2:00–3:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Danerine Mendieta",
+    "titulo": "Danerine Mendieta — De Perú a Francia: cómo conseguir oportunidades internacionales en Ciencias Sociales y Políticas",
+    "fechaHora": "Viernes 26 de junio, 2:00–3:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Dr. Gabriela Calistro",
+    "titulo": "Dr. Gabriela Calistro — Más allá del doctorado: ciencia internacional con impacto social en el Perú",
+    "fechaHora": "Lunes 6 de julio, 8:00–9:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Dr. Meiling Carbajal",
+    "titulo": "Dr. Meiling Carbajal — De Perú a la residencia de Neurología en Estados Unidos: experiencias, retos y aprendizajes",
+    "fechaHora": "Sábado 20 de junio, 6:00–7:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Dr. Walter Curioso",
+    "titulo": "Dr. Walter Curioso — Por qué la mejor tecnología fracasa si olvida el factor humano: Lecciones desde la salud digital",
+    "fechaHora": "Miércoles 17 de junio, 2:00–3:00 PM",
+    "video": "https://youtu.be/XZts8Zb51-I"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Dr. Yamina Silva",
+    "titulo": "Dr. Yamina Silva — De Perú a Rusia: Ciencia y políticas para enfrentar el cambio climático",
+    "fechaHora": "Sábado 4 de julio, 5:00–6:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Fernanda Pons",
+    "titulo": "Fernanda Pons — El poder de contar tu historia: becas, oportunidades internacionales y marca personal con impacto social",
+    "fechaHora": "Miércoles 17 de junio, 6:00–7:00 PM",
+    "video": "https://youtu.be/elv_WEn_GwA"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Francesca Rivas",
+    "titulo": "Francesca Rivas — ¿Por qué estudiar Biofísica?: Mi camino hacia un Máster internacional",
+    "fechaHora": "Viernes 3 de julio, 2:00–3:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Ing. Ruth Manzanares",
+    "titulo": "Ing. Ruth Manzanares — NASA, patentes e invención: cómo convertir una idea en tecnología con impacto",
+    "fechaHora": "Miércoles 1 de julio, 8:00–9:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Jashira Meza",
+    "titulo": "Jashira Meza — Cómo pasar de una idea a un proyecto real: Lo que Santander X Explorer me enseñó sobre emprender, fallar y abrirme camino",
+    "fechaHora": "Martes 23 de junio, 6:00–7:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Johann J. Cárdenas",
+    "titulo": "Johann J. Cárdenas — Primera generación, Beca Fulbright y Doctorado en EE.UU.: Mi ruta desde el Perú a la investigación en Ingeniería Civil",
+    "fechaHora": "Domingo 5 de julio, 10:30–11:30 AM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Josefina Miró Quesada Gayoso",
+    "titulo": "Josefina Miró Quesada Gayoso — De PUCP a Cambridge, Stanford y Knight-Hennessy: derecho, justicia y liderazgo global",
+    "fechaHora": "Viernes 3 de julio, 3:00–4:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Karla Ruiz",
+    "titulo": "Karla Ruiz — ¿Cómo elegir una carrera en la era de IA?: De Ciencias Políticas a trabajar en transformación digital",
+    "fechaHora": "Jueves 2 de julio, 8:00–9:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Kelly Regalado",
+    "titulo": "Kelly Regalado — De becaria en Estados Unidos a los 16 a trabajar en Europa: el timeline real para construir tu camino internacional",
+    "fechaHora": "Sábado 27 de junio, 3:00–4:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Lucía Coll",
+    "titulo": "Lucía Coll — ¿De qué está compuesto el universo?: Lo que nadie te cuenta sobre hacer investigación en física en Europa",
+    "fechaHora": "Domingo 28 de junio, 10:00–11:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Myra E. Flores",
+    "titulo": "Myra E. Flores — De la química a la política científica: cómo una vocación científica puede contribuir al futuro del país",
+    "fechaHora": "Martes 30 de junio, 9:00–10:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Nathaly Dongo",
+    "titulo": "Nathaly Dongo — Cómo acercarte a la investigación en IA aplicada a salud siendo estudiante",
+    "fechaHora": "Sábado 27 de junio, 5:00–6:30 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Nicole Caballero",
+    "titulo": "Nicole Caballero — De San Marcos a Europa: neurotecnología, medicina de precisión y tecnología médica",
+    "fechaHora": "Domingo 5 de julio, 3:00–4:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Thalía Leyton",
+    "titulo": "Thalía Leyton — Cómo prepararse desde el pregrado para oportunidades y posgrados globales",
+    "fechaHora": "Sábado 4 de julio, 4:00–5:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Charla regular",
+    "ponente": "Valerie Aguilar",
+    "titulo": "Valerie Aguilar — Stanford y Harvard al mismo tiempo: todo sobre títulos duales y cómo convertir tu historia en una candidatura global",
+    "fechaHora": "Lunes 6 de julio, 2:00–3:00 PM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Masterclass 360°",
+    "ponente": "Gladys Choque",
+    "titulo": "MASTERCLASS 360° con Gladys Choque — De Cusco a São Paulo: cómo construir una carrera en Ciencia de Datos desde cero con Python",
+    "fechaHora": "Sábado 4 de julio, 10:00–11:30 AM",
+    "video": "PEGAVIDEOAQUI"
+  },
+  {
+    "tipo": "Taller",
+    "ponente": "Carla Martinez",
+    "titulo": "TALLER con Carla Martinez — Pasaporte Global: CV, academia vs. industria y networking internacional",
+    "fechaHora": "Domingo 5 de julio, 9:00–10:30 AM",
+    "video": "PEGAVIDEOAQUI"
+  }
+];
+
+// PEGANUEVAGRABACIONAQUI
+// Para añadir una charla nueva que no esté en la lista, copia este bloque dentro de GRABACIONES:
+// {
+//   "tipo": "Charla regular",
+//   "ponente": "NOMBRE DEL PONENTE",
+//   "titulo": "TÍTULO DE LA CHARLA",
+//   "fechaHora": "FECHA Y HORA",
+//   "video": "PEGAVIDEOAQUI"
+// },
+
+let selected = [];
+let filtroTipo = "";
+let filtroEstado = "available";
+
+function escapeHtml(str){
+  return String(str || "").replace(/[&<>"']/g, function(m){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];
+  });
+}
+
+function normalizeText(s){
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function hasVideo(c){
+  return typeof c.video === "string" && /^https?:\/\//i.test(c.video.trim()) && c.video.trim() !== "PEGAVIDEOAQUI";
+}
+
+function updateFilterButtons(){
+  ["available","all","missing"].forEach(state => {
+    const el = document.getElementById("f-" + state);
+    if (el) el.className = state === filtroEstado ? "btn-active" : "btn-soft";
+  });
+  ["","Charla regular","Masterclass 360°","Taller"].forEach(tipo => {
+    const el = document.getElementById("t-" + tipo);
+    if (el) el.className = tipo === filtroTipo ? "btn-active" : "btn-soft";
+  });
+}
+
+function filtrarEstado(estado){
+  filtroEstado = estado;
+  renderTalks();
+}
+
+function filtrarTipo(tipo){
+  filtroTipo = tipo;
+  renderTalks();
+}
+
+function renderTalks(){
+  updateFilterButtons();
+  const q = normalizeText(document.getElementById("busqueda").value);
+  const box = document.getElementById("talkList");
+
+  const filtered = GRABACIONES.filter((c) => {
+    const text = normalizeText(c.tipo + " " + c.ponente + " " + c.titulo + " " + c.fechaHora);
+    const okTipo = !filtroTipo || c.tipo === filtroTipo;
+    const okText = !q || text.includes(q);
+    const okEstado = filtroEstado === "all" || (filtroEstado === "available" && hasVideo(c)) || (filtroEstado === "missing" && !hasVideo(c));
+    return okTipo && okText && okEstado;
+  });
+
+  if (!filtered.length){
+    box.innerHTML = '<div class="talk"><div class="small">No encontré grabaciones con esa búsqueda/filtro.</div></div>';
+    return;
+  }
+
+  box.innerHTML = filtered.map(c => {
+    const idx = GRABACIONES.indexOf(c);
+    const already = selected.includes(idx);
+    const ready = hasVideo(c);
+    return `
+      <div class="talk">
+        <div class="talk-title">${escapeHtml(c.titulo)}</div>
+        <div class="talk-meta">${escapeHtml(c.fechaHora || "")}</div>
+        <div class="talk-actions">
+          <div>
+            <span class="tag">${escapeHtml(c.tipo)}</span>
+            <span class="tag ${ready ? "tag-ok" : "tag-missing"}">${ready ? "Video listo" : "Falta video"}</span>
+          </div>
+          <button class="${already ? "btn-soft" : "btn-main"}" onclick="addRecording(${idx})" ${ready ? "" : "disabled"}>${already ? "Añadida ✓" : "+ Añadir"}</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function addRecording(idx){
+  if (!hasVideo(GRABACIONES[idx])) return;
+  if (!selected.includes(idx)) selected.push(idx);
+  renderSelected();
+  renderTalks();
+  renderEmail();
+}
+
+function removeRecording(idx){
+  selected = selected.filter(x => x !== idx);
+  renderSelected();
+  renderTalks();
+  renderEmail();
+}
+
+function renderSelected(){
+  const box = document.getElementById("selectedList");
+  if (!selected.length){
+    box.innerHTML = "Todavía no añadiste grabaciones.";
+    return;
+  }
+  box.innerHTML = selected.map(idx => {
+    const c = GRABACIONES[idx];
+    return `<div class="selected-item"><b>${escapeHtml(c.ponente)}:</b> ${escapeHtml(c.titulo)}<br><span>${escapeHtml(c.fechaHora || "")}</span><br><button class="btn-danger" style="margin-top:6px;padding:7px 10px;" onclick="removeRecording(${idx})">Quitar</button></div>`;
+  }).join("");
+}
+
+function limpiarGrabaciones(){
+  selected = [];
+  renderSelected();
+  renderTalks();
+  renderEmail();
+}
+
+function limpiarTodo(){
+  document.getElementById("nombre").value = "";
+  document.getElementById("busqueda").value = "";
+  selected = [];
+  filtroEstado = "available";
+  filtroTipo = "";
+  renderSelected();
+  renderTalks();
+  renderEmail();
+}
+
+function recordingCard(c){
+  return `
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate; border-spacing:0; margin:0 0 14px 0; background:#FFEFE3; border:1px solid #FBC3BC; border-radius:14px;">
+    <tr>
+      <td style="padding:18px 18px 16px 18px; font-family:Arial,Helvetica,sans-serif;">
+        <div style="font-size:12px; line-height:16px; color:#6D0006; font-weight:bold; text-transform:uppercase; letter-spacing:0.4px;">${escapeHtml(c.tipo)}</div>
+        <div style="font-size:17px; line-height:23px; color:#2b2b2b; font-weight:bold; margin-top:4px;">${escapeHtml(c.titulo)}</div>
+        <div style="font-size:14px; line-height:20px; color:#6D0006; margin-top:7px;">🎥 Grabación disponible</div>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 10px auto; border-collapse:collapse;">
+          <tr>
+            <td bgcolor="#A80414" style="border-radius:999px; text-align:center;">
+              <a href="${escapeHtml(c.video)}" target="_blank" style="display:inline-block; padding:12px 22px; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:999px;">Ver grabación en YouTube</a>
+            </td>
+          </tr>
+        </table>
+
+        <div style="font-size:12px; line-height:18px; color:#555555; text-align:center;">
+          Si el botón no abre, usa este enlace:<br>
+          <a href="${escapeHtml(c.video)}" target="_blank" style="color:#A80414; word-break:break-all;">${escapeHtml(c.video)}</a>
+        </div>
+      </td>
+    </tr>
+  </table>`;
+}
+
+function renderSubject(){
+  const subj = selected.length === 0
+    ? "Grabación de Peruanos Sin Fronteras"
+    : selected.length === 1
+      ? "Grabación: " + GRABACIONES[selected[0]].ponente + " — Peruanos Sin Fronteras"
+      : "Grabaciones de tus charlas — Peruanos Sin Fronteras";
+  document.getElementById("subjectPreview").value = subj;
+}
+
+function renderEmail(){
+  const nombre = document.getElementById("nombre").value.trim() || "[Nombre]";
+  const grabacionesHtml = selected.length
+    ? selected.map(idx => recordingCard(GRABACIONES[idx])).join("")
+    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin:0 0 14px 0; background:#FFEFE3; border:1px dashed #FBC3BC; border-radius:14px;"><tr><td style="padding:20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#6D0006; text-align:center;">Aquí aparecerán los botones de YouTube de las grabaciones que añadas.</td></tr></table>`;
+
+  const plural = selected.length > 1;
+  const email = `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; background:#ffffff; margin:0; padding:0;">
+  <tr>
+    <td align="center" style="padding:18px 10px; background:#ffffff;">
+      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px; max-width:640px; border-collapse:collapse; background:#ffffff; border:1px solid #FBC3BC;">
+        <tr>
+          <td align="center" bgcolor="#FBC3BC" style="background:#FBC3BC; padding:0; margin:0;">
+            <img src="${asset(ASSETS.banner)}" width="640" alt="Peruanos Sin Fronteras × MenstruAcción" style="display:block; width:640px; max-width:100%; height:auto; border:0; margin:0 auto;">
+          </td>
+        </tr>
+        <tr>
+          <td align="center" bgcolor="#FBC3BC" style="padding:22px 28px 26px 28px; background:#FBC3BC; font-family:Arial,Helvetica,sans-serif;">
+            <img src="${asset(ASSETS.logo)}" width="78" height="78" alt="MenstruAcción" style="display:block; width:78px; height:78px; object-fit:contain; border:0; margin:0 auto 12px auto;">
+            <div style="font-size:25px; line-height:31px; color:#6D0006; font-weight:bold;">Peruanos Sin Fronteras</div>
+            <div style="font-size:19px; line-height:25px; color:#A80414; margin-top:2px;">× MenstruAcción</div>
+            <div style="height:1px; line-height:1px; background:#A80414; width:170px; margin:16px auto 12px auto;">&nbsp;</div>
+            <div style="font-size:14px; line-height:20px; color:#6D0006;">Grabaciones para seguir aprendiendo, volviendo y creciendo.</div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px 32px 10px 32px; font-family:Arial,Helvetica,sans-serif; color:#333333;">
+            <div style="font-size:22px; line-height:28px; color:#6D0006; font-weight:bold; text-align:center;">¡Hola, ${escapeHtml(nombre)}! 🚀🇵🇪</div>
+
+            <p style="font-size:15px; line-height:23px; margin:22px 0 0 0;">Gracias por participar en <b>Peruanos Sin Fronteras</b> y por sumar tu granito de arena a esta causa. Con tu apoyo, nos acercamos más a nuestra meta de llegar a <b>303 niñas y adolescentes en Lima, Cajamarca y Amazonas</b> con educación, productos sostenibles y acompañamiento.</p>
+
+            <p style="font-size:15px; line-height:23px; margin:16px 0 18px 0;">Estamos muy agradecidas por tu confianza y por haber sido parte de este espacio. Aquí te dejamos ${plural ? "las charlas grabadas" : "la charla grabada"} que seleccionaste. Disfrútala${plural ? "s" : ""}, mírala${plural ? "s" : ""} cuantas veces quieras y vuelve a ella${plural ? "s" : ""} cuando lo necesites.</p>
+
+            ${grabacionesHtml}
+
+            <p style="font-size:15px; line-height:23px; margin:18px 0 0 0;">Esperamos que esta experiencia te sirva en tu carrera, tus decisiones y tu futuro. Por favor, resguarda la información y úsala con responsabilidad.</p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate; border-spacing:0; margin:20px 0 16px 0; background:#fffafa; border:1px solid #FBC3BC; border-radius:14px;">
+              <tr>
+                <td style="padding:18px; font-family:Arial,Helvetica,sans-serif; text-align:center;">
+                  <div style="font-size:16px; line-height:22px; color:#6D0006; font-weight:bold;">Repositorio de becas y oportunidades</div>
+                  <div style="font-size:14px; line-height:21px; color:#333333; margin-top:8px;">El repositorio será enviado por el canal oficial de WhatsApp de MenstruAcción. Ingresa para recibir el acceso al finalizar la feria virtual, el <b>6 de julio</b>.</div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0 auto; border-collapse:collapse;">
+                    <tr>
+                      <td bgcolor="#A80414" style="border-radius:999px; text-align:center;">
+                        <a href="${WHATSAPP_CHANNEL}" target="_blank" style="display:inline-block; padding:12px 22px; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:999px;">Unirme al canal oficial</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <p style="font-size:15px; line-height:23px; margin:16px 0 0 0;">Gracias por creer en una educación que abre camino para más personas. Nos alegra muchísimo que seas parte de esta comunidad. 🫶✨</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="center" style="padding:24px 32px 30px 32px; font-family:Arial,Helvetica,sans-serif; color:#6D0006; text-align:center;">
+            <div style="height:1px; line-height:1px; background:#FBC3BC; width:80%; margin:0 auto 20px auto;">&nbsp;</div>
+            <div style="font-size:15px; line-height:23px;">Con cariño,</div>
+            <div style="font-size:17px; line-height:24px; font-weight:bold;">Equipo Organizador de Peruanos Sin Fronteras</div>
+            <div style="font-size:15px; line-height:23px;">MenstruAcción</div>
+            ${socialFooter()}
+            <div style="font-size:13px; line-height:20px; margin-top:8px;">
+              <a href="${LINKS.website}" target="_blank" style="color:#A80414; font-weight:bold; text-decoration:none;">https://menstruaccion.org/</a>
+            </div>
+            <div style="font-size:12px; line-height:18px; margin-top:8px; color:#6D0006;">
+              <a href="${LINKS.whatsappChannel}" target="_blank" style="color:#A80414; font-weight:bold; text-decoration:none;">Canal oficial de WhatsApp</a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+  document.getElementById("emailPreview").innerHTML = email;
+  renderSubject();
+}
+
+function seleccionarCorreo(){
+  const node = document.getElementById("emailPreview");
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function copiarCorreo(){
+  seleccionarCorreo();
+  const ok = document.execCommand("copy");
+  if (ok) alert("Correo copiado. Ahora pégalo en Gmail con Ctrl+V.");
+  else alert("Seleccioné el correo. Presiona Ctrl+C y pégalo en Gmail.");
+}
+
+function copiarAsunto(){
+  const input = document.getElementById("subjectPreview");
+  input.select();
+  input.setSelectionRange(0, 99999);
+  const ok = document.execCommand("copy");
+  if (ok) alert("Asunto copiado.");
+  else alert("Seleccioné el asunto. Presiona Ctrl+C.");
+}
+
+renderTalks();
+renderSelected();
+renderEmail();
+</script>
+</body>
+</html>
